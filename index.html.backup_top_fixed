@@ -1,0 +1,2402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>写作帮手 - 移动版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* 主容器 */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: #f5f5f5;
+        }
+        
+        /* 顶部导航 - 胶囊效果 */
+.top-bar {
+    background: transparent;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.top-bar h1 {
+    display: none;
+}
+
+/* 新建书籍按钮 - 胶囊效果 */
+.top-bar button {
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(20px);
+    border: none;
+    color: #1a1a1a;
+    padding: 8px 20px;
+    border-radius: 40px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.top-bar button:active {
+    transform: scale(0.96);
+    background: rgba(255,255,255,0.98);
+}
+
+.top-bar button::before {
+    content: "+";
+    font-size: 16px;
+    font-weight: 600;
+}
+        
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        
+        /* 书籍卡片 */
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 16px;
+        }
+        
+        .book-card {
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            position: relative;
+        }
+        
+        .book-cover-img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .book-cover-placeholder {
+            height: 180px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+        
+        .book-info {
+            padding: 12px;
+        }
+        
+        .book-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .book-stats {
+            font-size: 11px;
+            color: #888;
+        }
+        
+        /* 书籍菜单按钮（三个点） */
+        .book-menu-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.5);
+            border: none;
+            border-radius: 20px;
+            width: 28px;
+            height: 28px;
+            font-size: 16px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .empty-state .icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        /* 底部导航栏 - 胶囊等距圆角效果 */
+.bottom-nav {
+    display: flex;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(20px);
+    border-top: none;
+    padding: 6px;
+    justify-content: space-around;
+    border-radius: 40px;
+    margin: 0 16px 16px 16px;
+    gap: 4px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 0;
+    border-radius: 32px;
+    cursor: pointer;
+    flex: 1;
+    text-align: center;
+    transition: all 0.25s ease;
+    background: transparent;
+    min-height: 52px;
+}
+
+.nav-item.active {
+    background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.nav-item:active {
+    transform: scale(0.96);
+}
+
+.nav-icon {
+    font-size: 20px;
+    transition: transform 0.2s;
+}
+
+.nav-item.active .nav-icon {
+    transform: scale(1.02);
+}
+
+.nav-label {
+    font-size: 10px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.nav-item.active .nav-label {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+        
+        /* 新建/编辑书籍弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #fff;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .modal.open {
+            display: block;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+            background: #fff;
+            position: sticky;
+            top: 0;
+        }
+        
+        .modal-header h3 {
+            font-size: 18px;
+        }
+        
+        .modal-header button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0 8px;
+        }
+        
+        .modal-content {
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+        }
+        
+        .cover-preview {
+            width: 100%;
+            height: 150px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            background-size: cover;
+            background-position: center;
+            border: 1px solid #ddd;
+            margin-top: 8px;
+        }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: #9b784e;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .btn-danger {
+            width: 100%;
+            padding: 14px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        
+        /* 章节列表页面 */
+        .chapter-page {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #f5f5f5;
+            z-index: 200;
+            flex-direction: column;
+        }
+        
+        .chapter-page.open {
+            display: flex;
+        }
+        
+        .chapter-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+            background: #ffffff00; /* 章节区域的导航透明 */
+            gap: 12px;
+        }
+        
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+        
+        .chapter-header h4 {
+            flex: 1;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .add-chapter-btn {
+            background: #9b784e;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        
+        .chapter-list-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+        
+        .volume-group {
+            background: #fff;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        
+        .volume-title {
+            padding: 14px 16px;
+            background: #f8f8f8;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            cursor: move;
+        }
+        
+        .volume-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .volume-actions button {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+        
+        .chapter-item {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            background: #fff;
+        }
+        
+        .chapter-item:active {
+            background: #f5f5f5;
+        }
+        
+        .chapter-item.dragging {
+            opacity: 0.3;
+            background: #e0e0e0;
+        }
+        
+        .chapter-item.drag-over {
+            border-top: 2px solid #007aff;
+        }
+        
+        .chapter-name {
+            flex: 1;
+            font-size: 15px;
+        }
+        
+        .chapter-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .chapter-actions button {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px;
+            color: #888;
+        }
+        
+        /* 拖拽手柄 */
+        .drag-handle {
+            cursor: grab;
+            margin-right: 12px;
+            font-size: 16px;
+            color: #ccc;
+        }
+        
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+        /* 头部按钮样式 - 胶囊效果 */
+.add-volume-btn-header {
+    background: #9b784e;
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.add-volume-btn-header:active {
+    transform: scale(0.96);
+    background: #8a6a45;
+}
+
+.add-chapter-btn {
+    background: #9b784e;
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.add-chapter-btn:active {
+    transform: scale(0.96);
+    background: #8a6a45;
+}
+        
+        /* 编辑器页面 */
+        /* 编辑器页面 - 沉浸式滚动 */
+.editor-page {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #f5f5f5;
+    z-index: 300;
+    flex-direction: column;
+}
+
+.editor-page.open {
+    display: flex;
+}
+
+/* 可滚动的内容区域（包含标题和正文） */
+/* 滚动区域 - 紧贴头部下方，无多余空间 */
+.editor-scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 20px 30px;
+}
+/* 编辑器头部 - 浮动层，不占用空间 */
+.editor-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: transparent;  /* 完全透明 */
+    gap: 12px;
+    z-index: 20;
+}
+
+.editor-header h4 {
+    display: none;
+}
+
+.back-btn {
+    background: #ffffff;  /* 白色背景 */
+    border: 1px solid rgba(0,0,0,0.1);  /* 可选：加个细边框 */
+    font-size: 14px;
+    cursor: pointer;
+    padding: 6px 18px;
+    border-radius: 30px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    color: #333;
+}
+
+.back-btn:active {
+    transform: scale(0.96);
+    background: rgba(0,0,0,0.05);  /* 点击时轻微反馈 */
+}
+
+.word-count-badge {
+    background: #ffffff;  /* 白色背景 */
+    border: 1px solid rgba(0,0,0,0.1);  /* 可选：加个细边框 */
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-weight: 500;
+    color: #666;
+}
+
+/* 滚动区域 - 顶部留出头部高度的空间 */
+.editor-scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 70px 20px 30px;  /* 顶部留出 70px 给浮动头部 */
+}
+
+/* 章节标题输入框 - 无边框大字体，紧贴顶部 */
+.chapter-title-input {
+    font-size: 24px;
+    font-weight: 700;
+    border: none;
+    padding: 0 0 8px 0;
+    outline: none;
+    width: 100%;
+    background: transparent;
+    color: #1a1a1a;
+    margin: 0;
+}
+
+/* 编辑器正文 - 大行距，紧贴标题 */
+.chapter-editor {
+    width: 100%;
+    min-height: 100vh;
+    font-size: 17px;
+    line-height: 1.7;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: inherit;
+    background: transparent;
+    color: #333;
+    margin: 0;
+    padding: 8px 0;
+}
+
+/* 字数统计 */
+.word-count {
+    text-align: right;
+    font-size: 12px;
+    color: #888;
+    padding: 12px 0 20px;
+    border-top: 1px solid rgba(0,0,0,0.05);
+    margin-top: 16px;
+}
+        
+        /* 弹窗确认 */
+        .confirm-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            width: 280px;
+            text-align: center;
+            z-index: 2000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            display: none;
+        }
+        
+        .confirm-dialog.open {
+            display: block;
+        }
+        
+        .confirm-dialog p {
+            margin-bottom: 20px;
+        }
+        
+        .confirm-dialog button {
+            padding: 8px 20px;
+            margin: 0 8px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+        
+        .confirm-dialog .confirm-yes {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .confirm-dialog .confirm-no {
+            background: #eee;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1999;
+            display: none;
+        }
+        
+        .overlay.open {
+            display: block;
+        }
+        /* 设置列表样式 */
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.settings-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: #fff;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.settings-item:active {
+    transform: scale(0.98);
+    background: #f8f8f8;
+}
+
+.settings-icon {
+    font-size: 28px;
+}
+
+.settings-info {
+    flex: 1;
+}
+
+.settings-name {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.settings-desc {
+    font-size: 12px;
+    color: #888;
+}
+
+.settings-arrow {
+    font-size: 24px;
+    color: #ccc;
+}
+
+/* 设置卡片 */
+.settings-card {
+    background: #fff;
+    border-radius: 24px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.settings-card-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.settings-card-item:last-child {
+    border-bottom: none;
+}
+
+.settings-card-item label {
+    font-weight: 500;
+    font-size: 14px;
+    color: #333;
+}
+
+/* 开关样式 */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #9b784e;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+/* 主题按钮 */
+.theme-btn {
+    padding: 8px 16px;
+    border-radius: 25px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.theme-btn.active {
+    outline: 2px solid #007aff;
+    outline-offset: 2px;
+}
+
+.theme-btn:active {
+    transform: scale(0.96);
+}
+
+/* 字号调整按钮 */
+.size-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.size-btn:active {
+    transform: scale(0.94);
+    background: #f0f0f0;
+}
+/* 数据统计页面样式 */
+.stats-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.stats-card-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.stats-card-number {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.stats-card-label {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.writing-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.writing-label {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 4px;
+}
+
+.writing-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #9b784e;
+}
+
+.writing-unit {
+    font-size: 11px;
+    color: #888;
+}
+
+.avg-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.avg-label {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.avg-number {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.calendar-day {
+    transition: all 0.2s;
+}
+
+.calendar-day:active {
+    transform: scale(0.95);
+}
+
+.achievement-card {
+    transition: all 0.2s;
+}
+
+.achievement-card:active {
+    transform: scale(0.98);
+}
+</style>
+</head>
+<body>
+<div class="app-container">
+    <!-- 顶部栏 -->
+    <div class="top-bar">
+    <button id="newBookBtn">新建书籍</button>
+</div>
+    
+    <!-- 主内容 -->
+    <div class="main-content" id="mainContent">
+        <div id="booksContainer"></div>
+    </div>
+    
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+        <div class="nav-item active" data-page="books">
+            <div class="nav-icon">📖</div>
+            <div class="nav-label">书籍</div>
+        </div>
+        <div class="nav-item" data-page="stats">
+            <div class="nav-icon">📊</div>
+            <div class="nav-label">数据</div>
+        </div>
+        <div class="nav-item" data-page="mine">
+            <div class="nav-icon">👤</div>
+            <div class="nav-label">我的</div>
+        </div>
+    </div>
+</div>
+
+<!-- 新建/编辑书籍弹窗 -->
+<div id="editBookModal" class="modal">
+    <div class="modal-header">
+        <h3 id="editBookModalTitle">编辑书籍</h3>
+        <button onclick="closeEditBookModal()">✕</button>
+    </div>
+    <div class="modal-content">
+        <div class="form-group">
+            <label>📖 小说名字</label>
+            <input type="text" id="editBookName" placeholder="请输入小说名称">
+        </div>
+        <div class="form-group">
+            <label>✍️ 作者名字</label>
+            <input type="text" id="editBookAuthor" placeholder="请输入作者名称">
+        </div>
+        <div class="form-group">
+            <label>📝 小说简介</label>
+            <textarea id="editBookDesc" rows="3" placeholder="请输入小说简介..."></textarea>
+        </div>
+        <div class="form-group">
+            <label>🖼️ 小说封面</label>
+            <input type="file" id="editBookCover" accept="image/*">
+            <div id="editCoverPreview" class="cover-preview"></div>
+        </div>
+        <div class="form-group">
+            <label>💰 千字稿费（元）</label>
+            <input type="number" id="editBookPrice" placeholder="0" value="0">
+        </div>
+        <button class="btn-primary" onclick="saveBookEdit()">保存修改</button>
+        <button class="btn-danger" onclick="deleteBookFromEdit()">删除书籍</button>
+    </div>
+</div>
+
+<!-- 章节列表页面 -->
+<div id="chapterPage" class="chapter-page">
+    <div class="chapter-header">
+    <button class="back-btn" onclick="closeChapterPage()">←</button>
+    <h4 id="chapterPageTitle">加载中...</h4>
+    <div style="display: flex; gap: 8px;">
+        <button class="add-volume-btn-header" onclick="addNewVolume()">+ 分卷</button>
+        <button class="add-chapter-btn" onclick="addNewChapter()">+ 章节</button>
+    </div>
+</div>
+    <div class="chapter-list-container" id="chapterListContainer"></div>
+</div>
+
+<!-- 编辑器页面 -->
+<div id="editorPage" class="editor-page">
+    <div class="editor-header">
+        <button class="back-btn" onclick="closeEditor()">返回</button>
+        <div class="word-count-badge" id="wordCountBadge">0字</div>
+        <h4 id="editorTitle" style="display: none;">编辑章节</h4>
+    </div>
+    <div class="editor-scroll-area">
+        <input type="text" id="chapterTitle" class="chapter-title-input" placeholder="章节标题">
+        <textarea id="chapterContent" class="chapter-editor" placeholder="开始写作..."></textarea>
+    </div>
+</div>>
+
+<!-- 确认弹窗 -->
+<div class="overlay" id="overlay"></div>
+<div class="confirm-dialog" id="confirmDialog">
+    <p id="confirmMessage">确定删除吗？</p>
+    <button class="confirm-no" onclick="hideConfirm()">取消</button>
+    <button class="confirm-yes" onclick="confirmAction()">确定</button>
+</div>
+
+<script>
+// ========== 数据模型 ==========
+let books = [];
+let currentBookId = null;
+let currentVolumeId = null;
+let currentChapterId = null;
+let currentEditBookId = null;
+let pendingDelete = null;
+
+// 章节类
+class Chapter {
+    constructor(id, title, content) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+        this.createdTime = new Date().toISOString();
+        this.updatedTime = new Date().toISOString();
+    }
+}
+
+// 分卷类
+class Volume {
+    constructor(id, name, chapters) {
+        this.id = id;
+        this.name = name;
+        this.chapters = chapters || [];
+    }
+}
+
+// 书籍类
+class Book {
+    constructor(id, title, volumes) {
+        this.id = id;
+        this.title = title;
+        this.volumes = volumes || [];
+        this.createdAt = new Date().toISOString();
+    }
+}
+
+// 加载数据
+function loadData() {
+    let saved = localStorage.getItem('mobile_writing_books');
+    if (saved) {
+        try {
+            books = JSON.parse(saved);
+        } catch(e) {}
+    }
+    if (!books || books.length === 0) {
+        let sampleChapter = new Chapter(Date.now(), '第一章', '这里是一个开始...');
+        let sampleVolume = new Volume(Date.now(), '第一卷', [sampleChapter]);
+        let sampleBook = new Book(Date.now(), '斗破苍穹', [sampleVolume]);
+        sampleBook.author = '天蚕土豆';
+        sampleBook.desc = '三十年河东三十年河西，莫欺少年穷！';
+        sampleBook.price = 15;
+        books = [sampleBook];
+        saveData();
+    }
+    renderBooks();
+}
+
+function saveData() {
+    localStorage.setItem('mobile_writing_books', JSON.stringify(books));
+}
+
+// 渲染书籍列表
+function renderBooks() {
+    let container = document.getElementById('booksContainer');
+    if (!container) return;
+    
+    if (books.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="icon">📚</div><div>暂无书籍，点击右上角"新建书籍"开始创作</div></div>';
+        return;
+    }
+    
+    let html = '<div class="books-grid">';
+    for (let i = 0; i < books.length; i++) {
+        let book = books[i];
+        let totalChapters = 0;
+        if (book.volumes) {
+            for (let v of book.volumes) {
+                if (v.chapters) totalChapters += v.chapters.length;
+            }
+        }
+        
+        // 封面显示逻辑
+        let coverHtml = '';
+        if (book.cover) {
+            coverHtml = `<img src="${book.cover}" class="book-cover-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">`;
+            coverHtml += `<div class="book-cover-placeholder" style="display:none;">📖</div>`;
+        } else {
+            coverHtml = `<div class="book-cover-placeholder">📖</div>`;
+        }
+        
+        html += `
+            <div class="book-card">
+                <button class="book-menu-btn" onclick="event.stopPropagation(); openBookEditMenu(${book.id})">⋯</button>
+                <div onclick="openChapterList(${book.id})">
+                    ${coverHtml}
+                    <div class="book-info">
+                        <div class="book-title">${escapeHtml(book.title)}</div>
+                        <div class="book-stats">${book.volumes ? book.volumes.length : 0}卷 · ${totalChapters}章</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// 打开书籍编辑菜单
+function openBookEditMenu(bookId) {
+    currentEditBookId = bookId;  // 设置为编辑模式
+    let book = books.find(b => b.id == bookId);
+    if (!book) return;
+    
+    document.getElementById('editBookModalTitle').innerText = '编辑书籍';
+    document.getElementById('editBookName').value = book.title || '';
+    document.getElementById('editBookAuthor').value = book.author || '';
+    document.getElementById('editBookDesc').value = book.desc || '';
+    document.getElementById('editBookPrice').value = book.price || 0;
+    document.getElementById('editCoverPreview').style.backgroundImage = book.cover ? 'url(' + book.cover + ')' : '';
+    document.getElementById('editCoverPreview').style.backgroundSize = 'cover';
+    
+    document.getElementById('editBookModal').classList.add('open');
+}
+
+// 关闭编辑弹窗
+function closeEditBookModal() {
+    document.getElementById('editBookModal').classList.remove('open');
+    currentEditBookId = null;
+    document.getElementById('editBookName').value = '';
+    document.getElementById('editBookAuthor').value = '';
+    document.getElementById('editBookDesc').value = '';
+    document.getElementById('editBookPrice').value = '0';
+    document.getElementById('editCoverPreview').style.backgroundImage = '';
+}
+
+// 保存书籍编辑（区分新建和编辑）
+function saveBookEdit() {
+    let newName = document.getElementById('editBookName').value.trim();
+    if (!newName) {
+        alert('请输入书籍名称');
+        return;
+    }
+    let author = document.getElementById('editBookAuthor').value;
+    let desc = document.getElementById('editBookDesc').value;
+    let price = document.getElementById('editBookPrice').value;
+    let coverFile = document.getElementById('editBookCover').files[0];
+    
+    if (currentEditBookId) {
+        // 编辑模式：更新现有书籍
+        let book = books.find(b => b.id == currentEditBookId);
+        if (book) {
+            book.title = newName;
+            book.author = author;
+            book.desc = desc;
+            book.price = price;
+            
+            if (coverFile) {
+                let reader = new FileReader();
+                reader.onload = function(ev) {
+                    book.cover = ev.target.result;
+                    saveData();
+                    renderBooks();
+                    closeEditBookModal();
+                    alert('保存成功');
+                };
+                reader.readAsDataURL(coverFile);
+            } else {
+                saveData();
+                renderBooks();
+                closeEditBookModal();
+                alert('保存成功');
+            }
+        }
+    } else {
+        // 新建模式：创建新书籍
+        let newChapter = new Chapter(Date.now(), '第一章', '');
+        let newVolume = new Volume(Date.now(), '第一卷', [newChapter]);
+        let newBook = new Book(Date.now(), newName, [newVolume]);
+        newBook.author = author;
+        newBook.desc = desc;
+        newBook.price = price;
+        
+        if (coverFile) {
+            let reader = new FileReader();
+            reader.onload = function(ev) {
+                newBook.cover = ev.target.result;
+                books.push(newBook);
+                saveData();
+                renderBooks();
+                closeEditBookModal();
+                alert('书籍《' + newName + '》创建成功');
+            };
+            reader.readAsDataURL(coverFile);
+        } else {
+            books.push(newBook);
+            saveData();
+            renderBooks();
+            closeEditBookModal();
+            alert('书籍《' + newName + '》创建成功');
+        }
+    }
+}
+
+// 删除书籍
+function deleteBookFromEdit() {
+    showConfirm('确定删除这本书吗？所有章节也会被删除！', function() {
+        books = books.filter(b => b.id != currentEditBookId);
+        saveData();
+        renderBooks();
+        closeEditBookModal();
+        alert('书籍已删除');
+    });
+}
+
+// 打开章节列表
+function openChapterList(bookId) {
+    currentBookId = bookId;
+    let book = books.find(b => b.id == bookId);
+    if (!book) return;
+    
+    document.getElementById('chapterPageTitle').innerText = book.title;
+    renderChapterList();
+    document.getElementById('chapterPage').classList.add('open');
+}
+
+// 渲染章节列表
+function renderChapterList() {
+    let book = books.find(b => b.id == currentBookId);
+    if (!book) return;
+    
+    let container = document.getElementById('chapterListContainer');
+    let html = '';
+    
+    for (let vi = 0; vi < book.volumes.length; vi++) {
+        let vol = book.volumes[vi];
+        html += `
+            <div class="volume-group" data-volume-id="${vol.id}" data-volume-index="${vi}">
+                <div class="volume-title" draggable="true">
+                    <span>📂 ${escapeHtml(vol.name)}</span>
+                    <div class="volume-actions">
+                        <button onclick="event.stopPropagation(); addChapterToVolume(${vol.id})" title="添加章节">+</button>
+                        <button onclick="event.stopPropagation(); renameVolume(${vol.id}, '${escapeHtml(vol.name)}')" title="重命名">✏️</button>
+                        <button onclick="event.stopPropagation(); deleteVolume(${vol.id})" title="删除分卷">🗑</button>
+                    </div>
+                </div>
+                <div class="chapters-list" data-volume-id="${vol.id}">
+        `;
+        
+        for (let ci = 0; ci < vol.chapters.length; ci++) {
+            let ch = vol.chapters[ci];
+            html += `
+                <div class="chapter-item" data-chapter-id="${ch.id}" data-volume-id="${vol.id}" data-chapter-index="${ci}" draggable="true">
+                    <div style="display: flex; align-items: center; flex: 1;">
+                        <span class="drag-handle">⋮⋮</span>
+                        <span class="chapter-name" onclick="event.stopPropagation(); openEditor(${vol.id}, ${ch.id})">📄 ${escapeHtml(ch.title)}</span>
+                    </div>
+                    <div class="chapter-actions">
+                        <button onclick="event.stopPropagation(); renameChapter(${vol.id}, ${ch.id}, '${escapeHtml(ch.title)}')" title="重命名">✏️</button>
+                        <button onclick="event.stopPropagation(); deleteChapter(${vol.id}, ${ch.id})" title="删除">🗑</button>
+                    </div>
+                </div>
+            `;
+        }
+        html += `</div></div>`;
+    }
+    
+    container.innerHTML = html;
+    initDragAndDrop();
+}
+
+// 初始化拖拽排序
+function initDragAndDrop() {
+    let dragSource = null;
+    let dragSourceVolumeId = null;
+    let dragSourceIndex = null;
+    
+    let chapters = document.querySelectorAll('.chapter-item');
+    
+    chapters.forEach(chapter => {
+        chapter.addEventListener('dragstart', function(e) {
+            dragSource = this;
+            dragSourceVolumeId = parseInt(this.getAttribute('data-volume-id'));
+            dragSourceIndex = parseInt(this.getAttribute('data-chapter-index'));
+            this.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', '');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        chapter.addEventListener('dragend', function(e) {
+            this.classList.remove('dragging');
+            dragSource = null;
+            dragSourceVolumeId = null;
+            dragSourceIndex = null;
+            document.querySelectorAll('.chapter-item').forEach(c => {
+                c.classList.remove('drag-over');
+            });
+        });
+        
+        chapter.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (dragSource && dragSource !== this) {
+                this.classList.add('drag-over');
+            }
+        });
+        
+        chapter.addEventListener('dragleave', function(e) {
+            this.classList.remove('drag-over');
+        });
+        
+        chapter.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            if (!dragSource || dragSource === this) return;
+            
+            let targetVolumeId = parseInt(this.getAttribute('data-volume-id'));
+            let targetIndex = parseInt(this.getAttribute('data-chapter-index'));
+            
+            let book = books.find(b => b.id == currentBookId);
+            
+            let sourceVol = book.volumes.find(v => v.id == dragSourceVolumeId);
+            let targetVol = book.volumes.find(v => v.id == targetVolumeId);
+            
+            if (!sourceVol || !targetVol) return;
+            
+            let movedChapter = sourceVol.chapters[dragSourceIndex];
+            sourceVol.chapters.splice(dragSourceIndex, 1);
+            
+            let targetIndexAdjusted = targetIndex;
+            if (dragSourceVolumeId === targetVolumeId && dragSourceIndex < targetIndex) {
+                targetIndexAdjusted--;
+            }
+            targetVol.chapters.splice(targetIndexAdjusted, 0, movedChapter);
+            
+            saveData();
+            renderChapterList();
+        });
+    });
+    
+    let volumes = document.querySelectorAll('.volume-group');
+    let dragVolumeSource = null;
+    let dragVolumeIndex = null;
+    
+    volumes.forEach(vol => {
+        let titleDiv = vol.querySelector('.volume-title');
+        if (titleDiv) {
+            titleDiv.addEventListener('dragstart', function(e) {
+                dragVolumeSource = vol;
+                dragVolumeIndex = parseInt(vol.getAttribute('data-volume-index'));
+                this.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', '');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            
+            titleDiv.addEventListener('dragend', function(e) {
+                this.classList.remove('dragging');
+                dragVolumeSource = null;
+                dragVolumeIndex = null;
+                document.querySelectorAll('.volume-group').forEach(v => {
+                    v.classList.remove('drag-over');
+                });
+            });
+            
+            titleDiv.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                if (dragVolumeSource && dragVolumeSource !== vol) {
+                    vol.classList.add('drag-over');
+                }
+            });
+            
+            titleDiv.addEventListener('dragleave', function(e) {
+                vol.classList.remove('drag-over');
+            });
+            
+            titleDiv.addEventListener('drop', function(e) {
+                e.preventDefault();
+                vol.classList.remove('drag-over');
+                
+                if (!dragVolumeSource || dragVolumeSource === vol) return;
+                
+                let targetIndex = parseInt(vol.getAttribute('data-volume-index'));
+                let book = books.find(b => b.id == currentBookId);
+                
+                let movedVolume = book.volumes[dragVolumeIndex];
+                book.volumes.splice(dragVolumeIndex, 1);
+                
+                let adjustedTarget = targetIndex;
+                if (dragVolumeIndex < targetIndex) {
+                    adjustedTarget--;
+                }
+                book.volumes.splice(adjustedTarget, 0, movedVolume);
+                
+                saveData();
+                renderChapterList();
+            });
+        }
+    });
+}
+
+// 添加新分卷
+function addNewVolume() {
+    let name = prompt('请输入分卷名称', '新分卷');
+    if (!name) return;
+    
+    let book = books.find(b => b.id == currentBookId);
+    let newVolume = new Volume(Date.now(), name, []);
+    book.volumes.push(newVolume);
+    saveData();
+    renderChapterList();
+}
+
+// 添加章节到分卷（自动生成序号）
+function addChapterToVolume(volId) {
+    let book = books.find(b => b.id == currentBookId);
+    let vol = book.volumes.find(v => v.id == volId);
+    
+    // 获取当前章节数量，自动生成序号
+    let chapterCount = vol.chapters.length;
+    let chineseNum = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
+    let newNumber = chapterCount + 1;
+    let chapterTitle = '';
+    
+    if (newNumber <= 10) {
+        chapterTitle = '第' + chineseNum[newNumber] + '章';
+    } else {
+        chapterTitle = '第' + newNumber + '章';
+    }
+    
+    let newChapter = new Chapter(Date.now(), chapterTitle, '');
+    vol.chapters.push(newChapter);
+    saveData();
+    renderChapterList();
+}
+
+// 添加新章节（顶部按钮）
+function addNewChapter() {
+    let book = books.find(b => b.id == currentBookId);
+    if (!book.volumes.length) {
+        addNewVolume();
+        return;
+    }
+    let vol = book.volumes[0];
+    addChapterToVolume(vol.id);
+}
+
+// 重命名分卷
+function renameVolume(volId, oldName) {
+    let newName = prompt('请输入新名称', oldName);
+    if (!newName) return;
+    
+    let book = books.find(b => b.id == currentBookId);
+    let vol = book.volumes.find(v => v.id == volId);
+    vol.name = newName;
+    saveData();
+    renderChapterList();
+}
+
+// 删除分卷
+function deleteVolume(volId) {
+    showConfirm('确定删除这个分卷吗？分卷内的章节也会被删除！', function() {
+        let book = books.find(b => b.id == currentBookId);
+        book.volumes = book.volumes.filter(v => v.id != volId);
+        if (book.volumes.length === 0) {
+            let newVolume = new Volume(Date.now(), '第一卷', []);
+            book.volumes.push(newVolume);
+        }
+        saveData();
+        renderChapterList();
+    });
+}
+
+// 重命名章节
+function renameChapter(volId, chId, oldName) {
+    let newName = prompt('请输入新名称', oldName);
+    if (!newName) return;
+    
+    let book = books.find(b => b.id == currentBookId);
+    let vol = book.volumes.find(v => v.id == volId);
+    let ch = vol.chapters.find(c => c.id == chId);
+    ch.title = newName;
+    saveData();
+    renderChapterList();
+}
+
+// 删除章节
+function deleteChapter(volId, chId) {
+    showConfirm('确定删除这个章节吗？', function() {
+        let book = books.find(b => b.id == currentBookId);
+        let vol = book.volumes.find(v => v.id == volId);
+        vol.chapters = vol.chapters.filter(c => c.id != chId);
+        if (vol.chapters.length === 0) {
+            let newChapter = new Chapter(Date.now(), '第一章', '');
+            vol.chapters.push(newChapter);
+        }
+        saveData();
+        renderChapterList();
+    });
+}
+
+// 打开编辑器
+function openEditor(volId, chId) {
+    currentVolumeId = volId;
+    currentChapterId = chId;
+    
+    let book = books.find(b => b.id == currentBookId);
+    let vol = book.volumes.find(v => v.id == volId);
+    let ch = vol.chapters.find(c => c.id == chId);
+    
+    document.getElementById('editorTitle').innerText = ch.title;
+    document.getElementById('chapterTitle').value = ch.title;
+    document.getElementById('chapterContent').value = ch.content.replace(/<[^>]*>/g, '');
+    updateWordCount();
+    
+    document.getElementById('editorPage').classList.add('open');
+}
+
+// 关闭章节列表页
+function closeChapterPage() {
+    document.getElementById('chapterPage').classList.remove('open');
+    currentBookId = null;
+    renderBooks();
+}
+
+// 关闭编辑器
+function closeEditor() {
+    saveCurrentChapter();
+    document.getElementById('editorPage').classList.remove('open');
+    renderChapterList();
+}
+
+// 更新字数
+function updateWordCount() {
+    let content = document.getElementById('chapterContent').value;
+    let wordCount = content.length;
+    
+    // 更新顶部字数徽章
+    let badge = document.getElementById('wordCountBadge');
+    if (badge) {
+        badge.innerText = wordCount + '字';
+    }
+}
+
+// 保存章节
+function saveCurrentChapter() {
+    if (!currentBookId || !currentVolumeId || !currentChapterId) return;
+    
+    let book = books.find(b => b.id == currentBookId);
+    let vol = book.volumes.find(v => v.id == currentVolumeId);
+    let ch = vol.chapters.find(c => c.id == currentChapterId);
+    
+    if (ch) {
+        ch.title = document.getElementById('chapterTitle').value;
+        ch.content = document.getElementById('chapterContent').value.replace(/\n/g, '<br>');
+        ch.updatedTime = new Date().toISOString();
+        saveData();
+    }
+}
+
+// 新建书籍
+function openNewBookModal() {
+    currentEditBookId = null;  // 确保是新建模式
+    document.getElementById('editBookModalTitle').innerText = '新建书籍';
+    document.getElementById('editBookName').value = '';
+    document.getElementById('editBookAuthor').value = '';
+    document.getElementById('editBookDesc').value = '';
+    document.getElementById('editBookPrice').value = '0';
+    document.getElementById('editCoverPreview').style.backgroundImage = '';
+    document.getElementById('editBookCover').value = '';
+    document.getElementById('editBookModal').classList.add('open');
+}
+
+function closeNewBookModal() {
+    closeEditBookModal();
+}
+
+function createNewBook() {
+    let name = document.getElementById('editBookName').value.trim();
+    if (!name) {
+        alert('请输入小说名称');
+        return;
+    }
+    let author = document.getElementById('editBookAuthor').value;
+    let desc = document.getElementById('editBookDesc').value;
+    let price = document.getElementById('editBookPrice').value;
+    let coverFile = document.getElementById('editBookCover').files[0];
+    
+    let newChapter = new Chapter(Date.now(), '第一章', '');
+    let newVolume = new Volume(Date.now(), '第一卷', [newChapter]);
+    let newBook = new Book(Date.now(), name, [newVolume]);
+    newBook.author = author;
+    newBook.desc = desc;
+    newBook.price = price;
+    
+    if (coverFile) {
+        let reader = new FileReader();
+        reader.onload = function(ev) {
+            newBook.cover = ev.target.result;
+            books.push(newBook);
+            saveData();
+            renderBooks();
+            closeEditBookModal();
+            alert('书籍《' + name + '》创建成功');
+        };
+        reader.readAsDataURL(coverFile);
+    } else {
+        books.push(newBook);
+        saveData();
+        renderBooks();
+        closeEditBookModal();
+        alert('书籍《' + name + '》创建成功');
+    }
+}
+
+// 封面预览
+document.getElementById('editBookCover').onchange = function(e) {
+    let file = e.target.files[0];
+    if (file) {
+        let reader = new FileReader();
+        reader.onload = function(ev) {
+            document.getElementById('editCoverPreview').style.backgroundImage = 'url(' + ev.target.result + ')';
+            document.getElementById('editCoverPreview').style.backgroundSize = 'cover';
+        };
+        reader.readAsDataURL(file);
+    }
+};
+
+// 自动保存
+let autoSaveTimer;
+document.getElementById('chapterTitle').oninput = function() {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(saveCurrentChapter, 500);
+};
+document.getElementById('chapterContent').oninput = function() {
+    updateWordCount();
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(saveCurrentChapter, 500);
+};
+
+// 确认弹窗
+function showConfirm(message, onConfirm) {
+    pendingDelete = onConfirm;
+    document.getElementById('confirmMessage').innerText = message;
+    document.getElementById('overlay').classList.add('open');
+    document.getElementById('confirmDialog').classList.add('open');
+}
+
+function hideConfirm() {
+    pendingDelete = null;
+    document.getElementById('overlay').classList.remove('open');
+    document.getElementById('confirmDialog').classList.remove('open');
+}
+
+function confirmAction() {
+    if (pendingDelete) {
+        pendingDelete();
+        pendingDelete = null;
+    }
+    hideConfirm();
+}
+
+// 底部导航
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.onclick = function() {
+        let page = this.getAttribute('data-page');
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        this.classList.add('active');
+        
+        if (page === 'books') {
+            renderBooks();
+        } else if (page === 'stats') {
+            renderStatsPage();
+        } else if (page === 'mine') {
+            renderSettingsPage();
+        }
+    };
+});
+
+// 工具函数
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+// 绑定新建书籍按钮
+document.getElementById('newBookBtn').onclick = openNewBookModal;
+
+// 初始化
+loadData();
+// ========== 设置页面 ==========
+let currentSettingPage = 'main'; // main, font, theme, backup, security, about
+
+function renderSettingsPage() {
+    if (currentSettingPage === 'main') {
+        renderSettingsMain();
+    } else if (currentSettingPage === 'font') {
+        renderFontSettings();
+    } else if (currentSettingPage === 'theme') {
+        renderThemeSettings();
+    } else if (currentSettingPage === 'backup') {
+        renderBackupSettings();
+    } else if (currentSettingPage === 'security') {
+        renderSecuritySettings();
+    } else if (currentSettingPage === 'about') {
+        renderAboutPage();
+    }
+}
+
+// 设置主页面
+function renderSettingsMain() {
+    let html = `
+        <div style="padding: 16px;">
+            <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 20px; margin-bottom: 8px;">我的</h2>
+                <p style="color: #888; font-size: 13px;">个性化设置和数据管理</p>
+            </div>
+            <div class="settings-list">
+                <div class="settings-item" onclick="openSettingPage('font')">
+                    <div class="settings-icon">🔤</div>
+                    <div class="settings-info">
+                        <div class="settings-name">字体</div>
+                        <div class="settings-desc">设置字体大小、行间距、字体样式</div>
+                    </div>
+                    <div class="settings-arrow">›</div>
+                </div>
+                <div class="settings-item" onclick="openSettingPage('theme')">
+                    <div class="settings-icon">🎨</div>
+                    <div class="settings-info">
+                        <div class="settings-name">主题</div>
+                        <div class="settings-desc">切换主题色、自定义背景图片</div>
+                    </div>
+                    <div class="settings-arrow">›</div>
+                </div>
+                <div class="settings-item" onclick="openSettingPage('backup')">
+                    <div class="settings-icon">💾</div>
+                    <div class="settings-info">
+                        <div class="settings-name">备份</div>
+                        <div class="settings-desc">自动备份设置、数据恢复</div>
+                    </div>
+                    <div class="settings-arrow">›</div>
+                </div>
+                <div class="settings-item" onclick="openSettingPage('security')">
+                    <div class="settings-icon">🔒</div>
+                    <div class="settings-info">
+                        <div class="settings-name">安全</div>
+                        <div class="settings-desc">密码保护、密保问题</div>
+                    </div>
+                    <div class="settings-arrow">›</div>
+                </div>
+                <div class="settings-item" onclick="openSettingPage('about')">
+                    <div class="settings-icon">ℹ️</div>
+                    <div class="settings-info">
+                        <div class="settings-name">关于</div>
+                        <div class="settings-desc">版本信息、开源协议</div>
+                    </div>
+                    <div class="settings-arrow">›</div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.getElementById('booksContainer').innerHTML = html;
+}
+
+function openSettingPage(page) {
+    currentSettingPage = page;
+    renderSettingsPage();
+}
+
+function goBackToSettings() {
+    currentSettingPage = 'main';
+    renderSettingsPage();
+}
+
+// 字体设置页面
+function renderFontSettings() {
+    let currentFontSize = localStorage.getItem('mobile_font_size') || '17';
+    let currentLineHeight = localStorage.getItem('mobile_line_height') || '1.7';
+    let currentFontFamily = localStorage.getItem('mobile_font_family') || '-apple-system';
+    
+    let html = `
+        <div style="padding: 16px;">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                <button onclick="goBackToSettings()" style="background: none; border: none; font-size: 24px; cursor: pointer;">←</button>
+                <h2 style="font-size: 20px;">字体设置</h2>
+            </div>
+            <div class="settings-card">
+                <div class="settings-card-item">
+                    <label>字号大小</label>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <button onclick="changeFontSize(-1)" class="size-btn">-</button>
+                        <span id="fontSizeDisplay" style="width: 50px; text-align: center;">${currentFontSize}px</span>
+                        <button onclick="changeFontSize(1)" class="size-btn">+</button>
+                    </div>
+                </div>
+                <div class="settings-card-item">
+                    <label>行间距</label>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <button onclick="changeLineHeight(-0.1)" class="size-btn">-</button>
+                        <span id="lineHeightDisplay" style="width: 50px; text-align: center;">${currentLineHeight}</span>
+                        <button onclick="changeLineHeight(0.1)" class="size-btn">+</button>
+                    </div>
+                </div>
+                <div class="settings-card-item">
+                    <label>字体样式</label>
+                    <select id="fontFamilySelect" onchange="changeFontFamily()" style="width: 100%; padding: 10px; border-radius: 12px; border: 1px solid #ddd; margin-top: 8px;">
+                        <option value="-apple-system" ${currentFontFamily === '-apple-system' ? 'selected' : ''}>系统默认</option>
+                        <option value="PingFang SC" ${currentFontFamily === 'PingFang SC' ? 'selected' : ''}>苹方</option>
+                        <option value="Georgia, serif" ${currentFontFamily === 'Georgia, serif' ? 'selected' : ''}>宋体风格</option>
+                        <option value="KaiTi, serif" ${currentFontFamily === 'KaiTi, serif' ? 'selected' : ''}>楷体</option>
+                        <option value="Courier New, monospace" ${currentFontFamily === 'Courier New, monospace' ? 'selected' : ''}>等宽字体</option>
+                    </select>
+                </div>
+            </div>
+            <div class="preview-area" style="margin-top: 20px; padding: 16px; background: #f8f8f8; border-radius: 20px;">
+                <div style="margin-bottom: 8px; color: #888;">预览效果</div>
+                <div id="previewText" style="font-size: ${currentFontSize}px; line-height: ${currentLineHeight}; font-family: ${currentFontFamily};">心之所动且就随风去了～</div>
+            </div>
+        </div>
+    `;
+    document.getElementById('booksContainer').innerHTML = html;
+}
+
+function changeFontSize(delta) {
+    let current = parseInt(localStorage.getItem('mobile_font_size') || '17');
+    let newSize = current + delta;
+    if (newSize < 12) newSize = 12;
+    if (newSize > 30) newSize = 30;
+    localStorage.setItem('mobile_font_size', newSize);
+    document.getElementById('fontSizeDisplay').innerText = newSize + 'px';
+    document.getElementById('previewText').style.fontSize = newSize + 'px';
+    // 应用到编辑器
+    let editor = document.getElementById('chapterContent');
+    if (editor) editor.style.fontSize = newSize + 'px';
+}
+
+function changeLineHeight(delta) {
+    let current = parseFloat(localStorage.getItem('mobile_line_height') || '1.7');
+    let newHeight = current + delta;
+    if (newHeight < 1.2) newHeight = 1.2;
+    if (newHeight > 2.5) newHeight = 2.5;
+    localStorage.setItem('mobile_line_height', newHeight);
+    document.getElementById('lineHeightDisplay').innerText = newHeight.toFixed(1);
+    document.getElementById('previewText').style.lineHeight = newHeight;
+    let editor = document.getElementById('chapterContent');
+    if (editor) editor.style.lineHeight = newHeight;
+}
+
+function changeFontFamily() {
+    let family = document.getElementById('fontFamilySelect').value;
+    localStorage.setItem('mobile_font_family', family);
+    document.getElementById('previewText').style.fontFamily = family;
+    let editor = document.getElementById('chapterContent');
+    if (editor) editor.style.fontFamily = family;
+}
+
+// 主题设置页面
+function renderThemeSettings() {
+    let currentTheme = localStorage.getItem('mobile_theme') || 'default';
+    let bgImage = localStorage.getItem('mobile_bg_image') || '';
+    
+    let html = `
+        <div style="padding: 16px;">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                <button onclick="goBackToSettings()" style="background: none; border: none; font-size: 24px; cursor: pointer;">←</button>
+                <h2 style="font-size: 20px;">主题设置</h2>
+            </div>
+            <div class="settings-card">
+                <div class="settings-card-item">
+                    <label>预设主题</label>
+                    <div style="display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap;">
+                        <button onclick="applyTheme('default')" class="theme-btn ${currentTheme === 'default' ? 'active' : ''}" style="background: #f0f0f0;">默认白</button>
+                        <button onclick="applyTheme('green')" class="theme-btn ${currentTheme === 'green' ? 'active' : ''}" style="background: #C8DBC5;">护眼绿</button>
+                        <button onclick="applyTheme('yellow')" class="theme-btn ${currentTheme === 'yellow' ? 'active' : ''}" style="background: #DFD5BD;">经典黄</button>
+                        <button onclick="applyTheme('dark')" class="theme-btn ${currentTheme === 'dark' ? 'active' : ''}" style="background: #1e1e2e; color: white;">暗夜黑</button>
+                    </div>
+                </div>
+                <div class="settings-card-item">
+                    <label>自定义背景</label>
+                    <input type="file" id="bgImageUpload" accept="image/*" style="margin-top: 8px;">
+                    <div id="bgPreview" style="width: 100%; height: 100px; background: #f0f0f0; border-radius: 12px; margin-top: 8px; background-size: cover; background-position: center;"></div>
+                    <button onclick="clearBgImage()" style="margin-top: 8px; padding: 8px; background: #dc3545; color: white; border: none; border-radius: 12px; width: 100%;">清除背景</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.getElementById('booksContainer').innerHTML = html;
+    
+    if (bgImage) {
+        document.getElementById('bgPreview').style.backgroundImage = 'url(' + bgImage + ')';
+    }
+    
+    document.getElementById('bgImageUpload').onchange = function(e) {
+        let file = e.target.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onload = function(ev) {
+                let bgUrl = ev.target.result;
+                localStorage.setItem('mobile_bg_image', bgUrl);
+                document.getElementById('bgPreview').style.backgroundImage = 'url(' + bgUrl + ')';
+                applyBackgroundImage(bgUrl);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+}
+
+function applyTheme(theme) {
+    localStorage.setItem('mobile_theme', theme);
+    let body = document.body;
+    body.classList.remove('theme-default', 'theme-green', 'theme-yellow', 'theme-dark');
+    body.classList.add('theme-' + theme);
+    renderThemeSettings();
+}
+
+function applyBackgroundImage(url) {
+    document.body.style.backgroundImage = 'url(' + url + ')';
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundAttachment = 'fixed';
+}
+
+function clearBgImage() {
+    localStorage.removeItem('mobile_bg_image');
+    document.body.style.backgroundImage = '';
+    document.getElementById('bgPreview').style.backgroundImage = '';
+}
+
+// 备份设置页面
+let backupInterval = null;
+function renderBackupSettings() {
+    let autoBackup = localStorage.getItem('auto_backup') === 'true';
+    let interval = localStorage.getItem('backup_interval') || '30';
+    
+    let html = `
+        <div style="padding: 16px;">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                <button onclick="goBackToSettings()" style="background: none; border: none; font-size: 24px; cursor: pointer;">←</button>
+                <h2 style="font-size: 20px;">备份设置</h2>
+            </div>
+            <div class="settings-card">
+                <div class="settings-card-item">
+                    <label>自动备份</label>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                        <label class="switch">
+                            <input type="checkbox" id="autoBackupCheckbox" ${autoBackup ? 'checked' : ''}>
+                            <span class="slider"></span>
+                        </label>
+                        <span id="autoBackupStatus">${autoBackup ? '已开启' : '已关闭'}</span>
+                    </div>
+                </div>
+                <div class="settings-card-item" id="intervalSetting" style="${autoBackup ? '' : 'opacity: 0.5;'}">
+                    <label>备份间隔</label>
+                    <select id="backupInterval" onchange="saveBackupInterval()" style="width: 100%; padding: 10px; border-radius: 12px; border: 1px solid #ddd; margin-top: 8px;" ${autoBackup ? '' : 'disabled'}>
+                        <option value="10" ${interval === '10' ? 'selected' : ''}>10秒</option>
+                        <option value="30" ${interval === '30' ? 'selected' : ''}>30秒</option>
+                        <option value="60" ${interval === '60' ? 'selected' : ''}>1分钟</option>
+                        <option value="300" ${interval === '300' ? 'selected' : ''}>5分钟</option>
+                    </select>
+                </div>
+                <button onclick="manualBackup()" style="margin-top: 16px; padding: 12px; background: #9b784e; color: white; border: none; border-radius: 12px; width: 100%;">立即备份</button>
+            </div>
+        </div>
+    `;
+    document.getElementById('booksContainer').innerHTML = html;
+    
+    let checkbox = document.getElementById('autoBackupCheckbox');
+    checkbox.onchange = function(e) {
+        let enabled = e.target.checked;
+        localStorage.setItem('auto_backup', enabled);
+        document.getElementById('autoBackupStatus').innerText = enabled ? '已开启' : '已关闭';
+        let intervalSetting = document.getElementById('intervalSetting');
+        intervalSetting.style.opacity = enabled ? '1' : '0.5';
+        document.getElementById('backupInterval').disabled = !enabled;
+        if (enabled) {
+            startAutoBackup();
+        } else {
+            stopAutoBackup();
+        }
+    };
+}
+
+function saveBackupInterval() {
+    let interval = document.getElementById('backupInterval').value;
+    localStorage.setItem('backup_interval', interval);
+    stopAutoBackup();
+    startAutoBackup();
+}
+
+function startAutoBackup() {
+    if (backupInterval) clearInterval(backupInterval);
+    let interval = parseInt(localStorage.getItem('backup_interval') || '30') * 1000;
+    backupInterval = setInterval(function() {
+        manualBackup();
+    }, interval);
+}
+
+function stopAutoBackup() {
+    if (backupInterval) {
+        clearInterval(backupInterval);
+        backupInterval = null;
+    }
+}
+
+function manualBackup() {
+    saveData();
+    alert('备份完成！数据已保存到本地');
+}
+
+// 安全设置页面
+function renderSecuritySettings() {
+    let passwordEnabled = localStorage.getItem('password_enabled') === 'true';
+    let question = localStorage.getItem('security_question') || '';
+    let answer = localStorage.getItem('security_answer') || '';
+    
+    let html = `
+        <div style="padding: 16px;">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                <button onclick="goBackToSettings()" style="background: none; border: none; font-size: 24px; cursor: pointer;">←</button>
+                <h2 style="font-size: 20px;">安全设置</h2>
+            </div>
+            <div class="settings-card">
+                <div class="settings-card-item">
+                    <label>启动密码</label>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                        <label class="switch">
+                            <input type="checkbox" id="passwordCheckbox" ${passwordEnabled ? 'checked' : ''}>
+                            <span class="slider"></span>
+                        </label>
+                        <span id="passwordStatus">${passwordEnabled ? '已开启' : '已关闭'}</span>
+                    </div>
+                </div>
+                <div class="settings-card-item" id="passwordSetting" style="${passwordEnabled ? '' : 'opacity: 0.5; display: none;'}">
+                    <label>设置密码</label>
+                    <input type="password" id="passwordInput" placeholder="请输入密码" style="width: 100%; padding: 10px; border-radius: 12px; border: 1px solid #ddd; margin-top: 8px;">
+                </div>
+                <div class="settings-card-item">
+                    <label>密保问题</label>
+                    <input type="text" id="securityQuestion" placeholder="例如：你的出生地是？" value="${question}" style="width: 100%; padding: 10px; border-radius: 12px; border: 1px solid #ddd; margin-top: 8px;">
+                </div>
+                <div class="settings-card-item">
+                    <label>密保答案</label>
+                    <input type="text" id="securityAnswer" placeholder="请输入答案" value="${answer}" style="width: 100%; padding: 10px; border-radius: 12px; border: 1px solid #ddd; margin-top: 8px;">
+                </div>
+                <button onclick="saveSecuritySettings()" style="margin-top: 16px; padding: 12px; background: #9b784e; color: white; border: none; border-radius: 12px; width: 100%;">保存设置</button>
+                <button onclick="forgotPassword()" style="margin-top: 8px; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 12px; width: 100%;">忘记密码？</button>
+            </div>
+        </div>
+    `;
+    document.getElementById('booksContainer').innerHTML = html;
+    
+    let checkbox = document.getElementById('passwordCheckbox');
+    let passwordSetting = document.getElementById('passwordSetting');
+    checkbox.onchange = function(e) {
+        let enabled = e.target.checked;
+        localStorage.setItem('password_enabled', enabled);
+        document.getElementById('passwordStatus').innerText = enabled ? '已开启' : '已关闭';
+        if (passwordSetting) {
+            passwordSetting.style.display = enabled ? 'block' : 'none';
+            passwordSetting.style.opacity = enabled ? '1' : '0.5';
+        }
+    };
+}
+
+function saveSecuritySettings() {
+    let enabled = document.getElementById('passwordCheckbox').checked;
+    let password = document.getElementById('passwordInput') ? document.getElementById('passwordInput').value : '';
+    let question = document.getElementById('securityQuestion').value;
+    let answer = document.getElementById('securityAnswer').value;
+    
+    localStorage.setItem('password_enabled', enabled);
+    if (password) localStorage.setItem('app_password', password);
+    localStorage.setItem('security_question', question);
+    localStorage.setItem('security_answer', answer);
+    alert('安全设置已保存');
+}
+
+function forgotPassword() {
+    let savedQuestion = localStorage.getItem('security_question');
+    let savedAnswer = localStorage.getItem('security_answer');
+    if (savedQuestion && savedAnswer) {
+        let userAnswer = prompt('密保问题：' + savedQuestion);
+        if (userAnswer === savedAnswer) {
+            let newPassword = prompt('请输入新密码');
+            if (newPassword) {
+                localStorage.setItem('app_password', newPassword);
+                alert('密码已重置');
+            }
+        } else {
+            alert('答案错误');
+        }
+    } else {
+        alert('请先设置密保问题');
+    }
+}
+
+// 关于页面
+function renderAboutPage() {
+    let html = `
+        <div style="padding: 16px;">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
+                <button onclick="goBackToSettings()" style="background: none; border: none; font-size: 24px; cursor: pointer;">←</button>
+                <h2 style="font-size: 20px;">关于</h2>
+            </div>
+            <div class="about-card" style="text-align: center; padding: 30px 20px; background: #fff; border-radius: 24px;">
+                <div style="font-size: 64px; margin-bottom: 16px;">✍️</div>
+                <h3 style="margin-bottom: 8px;">写作帮手</h3>
+                <p style="color: #666; margin-bottom: 4px;">版本 1.0.0</p>
+                <p style="color: #666; margin-bottom: 20px;">免费 · 开源 · 自由写作</p>
+                <div style="border-top: 1px solid #eee; padding-top: 20px;">
+                    <p style="font-size: 13px; color: #888;">© 2024 写作帮手 OpenWrite</p>
+                    <p style="font-size: 12px; color: #aaa; margin-top: 8px;">GitHub: github.com/likeweixue/openwrite</p>
+                </div>
+            </div>
+        </div>
+    `;
+    document.getElementById('booksContainer').innerHTML = html;
+}
+
+// 启动自动备份
+if (localStorage.getItem('auto_backup') === 'true') {
+    startAutoBackup();
+}
+// ========== 数据统计页面 ==========
+let currentStatsDate = new Date();
+
+function renderStatsPage() {
+    let stats = calculateStats();
+    let calendarHtml = renderCalendar();
+    
+    let html = `
+        <div style="padding: 16px;">
+            <div style="margin-bottom: 20px;">
+                <h2 style="font-size: 20px; margin-bottom: 4px;">数据统计</h2>
+                <p style="color: #888; font-size: 13px;">你的写作数据一览</p>
+            </div>
+            
+            <!-- 总览卡片 -->
+            <div class="stats-overview" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;">
+                <div class="stats-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <div class="stats-card-icon">📝</div>
+                    <div class="stats-card-number">${stats.totalWords}</div>
+                    <div class="stats-card-label">总字数</div>
+                </div>
+                <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                    <div class="stats-card-icon">📖</div>
+                    <div class="stats-card-number">${stats.totalChapters}</div>
+                    <div class="stats-card-label">总章节</div>
+                </div>
+                <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+                    <div class="stats-card-icon">📚</div>
+                    <div class="stats-card-number">${stats.totalBooks}</div>
+                    <div class="stats-card-label">书籍数量</div>
+                </div>
+                <div class="stats-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
+                    <div class="stats-card-icon">⏰</div>
+                    <div class="stats-card-number">${stats.totalDays}</div>
+                    <div class="stats-card-label">写作天数</div>
+                </div>
+            </div>
+            
+            <!-- 码字统计卡片 -->
+            <div class="stats-section" style="margin-bottom: 20px;">
+                <h3 style="font-size: 16px; margin-bottom: 12px; padding-left: 4px;">📊 码字统计</h3>
+                <div class="writing-stats" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                    <div class="writing-card">
+                        <div class="writing-label">今日</div>
+                        <div class="writing-number">${stats.todayWords}</div>
+                        <div class="writing-unit">字</div>
+                    </div>
+                    <div class="writing-card">
+                        <div class="writing-label">本周</div>
+                        <div class="writing-number">${stats.weekWords}</div>
+                        <div class="writing-unit">字</div>
+                    </div>
+                    <div class="writing-card">
+                        <div class="writing-label">本月</div>
+                        <div class="writing-number">${stats.monthWords}</div>
+                        <div class="writing-unit">字</div>
+                    </div>
+                    <div class="writing-card">
+                        <div class="writing-label">今年</div>
+                        <div class="writing-number">${stats.yearWords}</div>
+                        <div class="writing-unit">字</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 平均统计 -->
+            <div class="stats-section" style="margin-bottom: 20px;">
+                <h3 style="font-size: 16px; margin-bottom: 12px; padding-left: 4px;">📈 平均数据</h3>
+                <div class="avg-stats" style="display: flex; gap: 12px;">
+                    <div class="avg-card" style="flex: 1;">
+                        <div class="avg-label">每章字数</div>
+                        <div class="avg-number">${stats.avgWordsPerChapter}</div>
+                    </div>
+                    <div class="avg-card" style="flex: 1;">
+                        <div class="avg-label">每日字数</div>
+                        <div class="avg-number">${stats.avgWordsPerDay}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 日历热力图 -->
+            <div class="stats-section" style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 style="font-size: 16px;">📅 写作日历</h3>
+                    <div style="display: flex; gap: 12px;">
+                        <button onclick="changeMonth(-1)" style="background: none; border: none; font-size: 18px; cursor: pointer;">◀</button>
+                        <span id="calendarMonth" style="font-weight: 500;">${currentStatsDate.getFullYear()}年${currentStatsDate.getMonth() + 1}月</span>
+                        <button onclick="changeMonth(1)" style="background: none; border: none; font-size: 18px; cursor: pointer;">▶</button>
+                    </div>
+                </div>
+                <div class="calendar-container" style="background: #fff; border-radius: 24px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <div id="calendarGrid">${calendarHtml}</div>
+                </div>
+            </div>
+            
+            <!-- 成就徽章 -->
+            <div class="stats-section">
+                <h3 style="font-size: 16px; margin-bottom: 12px; padding-left: 4px;">🏆 创作成就</h3>
+                <div class="achievements" style="display: flex; flex-wrap: wrap; gap: 12px;">
+                    ${renderAchievements(stats)}
+                </div>
+            </div>
+        </div>
+    `;
+    document.getElementById('booksContainer').innerHTML = html;
+}
+
+// 计算统计数据
+function calculateStats() {
+    let totalWords = 0;
+    let totalChapters = 0;
+    let totalBooks = books.length;
+    let todayWords = 0;
+    let weekWords = 0;
+    let monthWords = 0;
+    let yearWords = 0;
+    let writingDays = new Set();
+    
+    let now = new Date();
+    let todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    let weekStart = todayStart - 6 * 86400000;
+    let monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    let yearStart = new Date(now.getFullYear(), 0, 1).getTime();
+    
+    for (let book of books) {
+        for (let vol of book.volumes) {
+            for (let ch of vol.chapters) {
+                let words = (ch.content || '').replace(/<[^>]*>/g, '').length;
+                totalWords += words;
+                totalChapters++;
+                
+                let updateTime = new Date(ch.updatedTime);
+                let timeKey = updateTime.toDateString();
+                writingDays.add(timeKey);
+                
+                if (updateTime.getTime() >= todayStart) todayWords += words;
+                if (updateTime.getTime() >= weekStart) weekWords += words;
+                if (updateTime.getTime() >= monthStart) monthWords += words;
+                if (updateTime.getTime() >= yearStart) yearWords += words;
+            }
+        }
+    }
+    
+    return {
+        totalWords: totalWords,
+        totalChapters: totalChapters,
+        totalBooks: totalBooks,
+        totalDays: writingDays.size,
+        todayWords: todayWords,
+        weekWords: weekWords,
+        monthWords: monthWords,
+        yearWords: yearWords,
+        avgWordsPerChapter: totalChapters > 0 ? Math.floor(totalWords / totalChapters) : 0,
+        avgWordsPerDay: writingDays.size > 0 ? Math.floor(totalWords / writingDays.size) : 0
+    };
+}
+
+// 渲染日历
+function renderCalendar() {
+    let year = currentStatsDate.getFullYear();
+    let month = currentStatsDate.getMonth();
+    let firstDay = new Date(year, month, 1);
+    let startWeekday = firstDay.getDay();
+    let daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    // 获取每天的字数
+    let dailyWords = {};
+    for (let book of books) {
+        for (let vol of book.volumes) {
+            for (let ch of vol.chapters) {
+                let updateTime = new Date(ch.updatedTime);
+                if (updateTime.getFullYear() === year && updateTime.getMonth() === month) {
+                    let day = updateTime.getDate();
+                    let words = (ch.content || '').replace(/<[^>]*>/g, '').length;
+                    dailyWords[day] = (dailyWords[day] || 0) + words;
+                }
+            }
+        }
+    }
+    
+    let weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+    let html = '<div class="calendar-weekdays" style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; margin-bottom: 12px;">';
+    for (let i = 0; i < 7; i++) {
+        html += `<div style="font-size: 12px; color: #888; padding: 4px;">${weekdays[i]}</div>`;
+    }
+    html += '</div><div class="calendar-days" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;">';
+    
+    for (let i = 0; i < startWeekday; i++) {
+        html += '<div style="aspect-ratio: 1; padding: 4px;"></div>';
+    }
+    
+    for (let d = 1; d <= daysInMonth; d++) {
+        let words = dailyWords[d] || 0;
+        let intensity = words > 0 ? Math.min(0.9, words / 1000) : 0;
+        let isToday = (year === new Date().getFullYear() && month === new Date().getMonth() && d === new Date().getDate());
+        
+        html += `
+            <div class="calendar-day ${words > 0 ? 'has-writing' : ''} ${isToday ? 'today' : ''}" 
+                 style="aspect-ratio: 1; background: ${words > 0 ? `rgba(155, 120, 78, ${0.2 + intensity * 0.6})` : '#f8f8f8'}; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; ${isToday ? 'border: 2px solid #9b784e;' : ''}"
+                 onclick="showDayDetail(${year}, ${month + 1}, ${d})">
+                <span style="font-size: 14px; font-weight: ${isToday ? '600' : '400'};">${d}</span>
+                ${words > 0 ? `<span style="font-size: 9px; color: #9b784e;">${words}</span>` : ''}
+            </div>
+        `;
+    }
+    html += '</div>';
+    return html;
+}
+
+function changeMonth(delta) {
+    currentStatsDate.setMonth(currentStatsDate.getMonth() + delta);
+    renderStatsPage();
+}
+
+function showDayDetail(year, month, day) {
+    let dateStr = `${year}-${month}-${day}`;
+    let content = '';
+    for (let book of books) {
+        for (let vol of book.volumes) {
+            for (let ch of vol.chapters) {
+                let updateTime = new Date(ch.updatedTime);
+                if (updateTime.getFullYear() === year && updateTime.getMonth() + 1 === month && updateTime.getDate() === day) {
+                    let words = (ch.content || '').replace(/<[^>]*>/g, '').length;
+                    content += `<div style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                        <div style="font-weight: 500;">${book.title} - ${ch.title}</div>
+                        <div style="font-size: 12px; color: #888;">${words} 字</div>
+                    </div>`;
+                }
+            }
+        }
+    }
+    if (content) {
+        alert(`📅 ${year}年${month}月${day}日\n\n${content}\n共 ${content.match(/<div>/g)?.length || 0} 个章节更新`);
+    } else {
+        alert(`${year}年${month}月${day}日\n\n暂无写作记录`);
+    }
+}
+
+// 渲染成就徽章
+function renderAchievements(stats) {
+    let achievements = [];
+    
+    if (stats.totalWords >= 1000) achievements.push({ name: '初涉文坛', desc: '累计字数达到1000', icon: '🌱' });
+    if (stats.totalWords >= 10000) achievements.push({ name: '小有名气', desc: '累计字数达到1万', icon: '🌟' });
+    if (stats.totalWords >= 50000) achievements.push({ name: '笔耕不辍', desc: '累计字数达到5万', icon: '✍️' });
+    if (stats.totalWords >= 100000) achievements.push({ name: '著作等身', desc: '累计字数达到10万', icon: '🏆' });
+    if (stats.totalDays >= 7) achievements.push({ name: '七日之约', desc: '连续写作7天', icon: '📅' });
+    if (stats.totalDays >= 30) achievements.push({ name: '满月之勤', desc: '写作满30天', icon: '🌙' });
+    if (stats.totalBooks >= 1) achievements.push({ name: '开山之作', desc: '创建第一本书籍', icon: '📖' });
+    if (stats.totalBooks >= 3) achievements.push({ name: '多产作者', desc: '拥有3本以上书籍', icon: '📚' });
+    if (stats.todayWords >= 500) achievements.push({ name: '日更达人', desc: '单日码字500+', icon: '⚡' });
+    if (stats.todayWords >= 2000) achievements.push({ name: '码字狂人', desc: '单日码字2000+', icon: '🔥' });
+    
+    if (achievements.length === 0) {
+        return '<div style="text-align: center; padding: 20px; color: #888;">继续创作，解锁更多成就</div>';
+    }
+    
+    return achievements.map(ach => `
+        <div class="achievement-card" style="background: #fff; border-radius: 20px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+            <div style="font-size: 28px;">${ach.icon}</div>
+            <div>
+                <div style="font-weight: 600; font-size: 14px;">${ach.name}</div>
+                <div style="font-size: 10px; color: #888;">${ach.desc}</div>
+            </div>
+        </div>
+    `).join('');
+}
+</script>
+</body>
+</html>
